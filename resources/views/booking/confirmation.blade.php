@@ -5,30 +5,112 @@
 <style>
     .booking-hero {
         position: relative;
-        height: 340px;
         overflow: hidden;
-        margin-bottom: 32px;
-        background: linear-gradient(
-            to bottom,
-            rgba(10,18,40,0.05) 0%,
-            rgba(10,18,40,0.08) 50%,
-            rgba(10,18,40,0.15) 100%
-        ), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1400&q=85&auto=format&fit=crop');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
+        margin-bottom: 24px;
+        padding: 28px 30px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #1b2a4a 0%, #2b426f 100%);
+        color: #fff;
+        box-shadow: 0 16px 40px rgba(27,42,74,0.12);
+    }
+    .booking-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top right, rgba(201,161,90,0.24), transparent 35%);
+        pointer-events: none;
+    }
+    .booking-hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 760px;
+    }
+    .booking-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.16);
+        border: 1px solid rgba(255,255,255,0.25);
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+    .booking-hero h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        color: #fff;
+    }
+    .booking-hero p {
+        margin: 0;
+        color: rgba(255,255,255,0.86);
+        line-height: 1.6;
+        font-size: 14px;
+    }
+    .booking-shell {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 24px;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(27,42,74,0.05);
+    }
+    .booking-intro {
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #efe7da;
+    }
+    .booking-intro h2 {
+        margin: 0 0 6px;
+        color: #1b2a4a;
+        font-size: 22px;
+    }
+    .booking-intro p {
+        margin: 0;
+        color: #6b6860;
+        font-size: 14px;
+    }
+    .booking-recap {
+        background: #fdf6ec;
+        border: 1px solid #ead7ab;
+        border-radius: 14px;
+        padding: 16px 18px;
+        margin-bottom: 20px;
+        color: #5b4c25;
+    }
+    .booking-recap-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        color: #a6833e;
+        margin-bottom: 10px;
+    }
+    .booking-recap-grid {
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:8px 12px;
+        font-size:13px;
     }
     @media (max-width: 768px) {
-        .booking-hero { height: 260px; background-attachment: scroll; }
-    }
-    @media (max-width: 480px) {
-        .booking-hero { height: 200px; background-attachment: scroll; }
+        .booking-hero { padding: 22px; }
+        .booking-shell { padding: 18px; }
+        .booking-recap-grid { grid-template-columns:1fr; }
     }
 </style>
 
-<div class="booking-hero"></div>
+<div class="booking-hero">
+    <div class="booking-hero-content">
+        <div class="booking-pill">Step 2 of 4</div>
+        <h1>Upload your confirmation</h1>
+        <p>Share your booking confirmation in just a few clicks, then continue to the final review.</p>
+    </div>
+</div>
 
-<div class="card" style="max-width:1000px;margin:0 auto;">
+<div class="card booking-shell">
     <div class="wizard-steps">
         <div class="wizard-step done"><span class="step-num">✓</span><span class="step-label">Welcome</span></div>
         <div class="wizard-step done"><span class="step-num">✓</span><span class="step-label">Details</span></div>
@@ -36,16 +118,15 @@
         <div class="wizard-step"><span class="step-num">4</span><span class="step-label">Summary</span></div>
     </div>
 
-    <h1 style="margin-bottom:6px;">Step 2: Upload Confirmation</h1>
-    <p style="margin-bottom:24px;">
-        Upload your booking confirmation document.
-        Accepted: <strong>PDF, JPG, PNG</strong> — max <strong>2MB</strong>.
-    </p>
+    <div class="booking-intro">
+        <h2>Confirmation upload</h2>
+        <p>Accepted files are PDF, JPG, and PNG, up to 2MB in size.</p>
+    </div>
 
     @if ($details)
-    <div style="background:var(--cream);border-radius:10px;padding:16px 20px;margin-bottom:24px;border-left:3px solid var(--gold);">
-        <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:12px;">Booking Recap</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+    <div class="booking-recap">
+        <div class="booking-recap-title">Booking recap</div>
+        <div class="booking-recap-grid">
             <div><span style="color:var(--muted);">Customer:</span> <strong>{{ session('booking.customer_name') }}</strong></div>
             <div><span style="color:var(--muted);">Booking ID:</span>
                 <code style="background:#fff;padding:1px 7px;border-radius:4px;font-weight:700;letter-spacing:1px;">{{ $bookingId }}</code>

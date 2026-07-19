@@ -25,7 +25,8 @@
                             <th>Check-out</th>
                             <th>Nights</th>
                             <th>Guests</th>
-                            <th>Confirmation</th>
+                            <th>Status</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -37,7 +38,8 @@
                                 <td>{{ $booking->check_out_date?->format('M j, Y') ?? '—' }}</td>
                                 <td>{{ $booking->nights }}</td>
                                 <td>{{ $booking->number_of_persons }}</td>
-                                <td style="font-size:13px;">{{ ucfirst($booking->confirmation_file_type) }}</td>
+                                <td><span class="badge {{ $booking->statusBadgeClass() }}">{{ $booking->statusLabel() }}</span></td>
+                                <td><a href="{{ route('booking.history.show', $booking) }}" class="btn btn-outline btn-sm">View</a></td>
                             </tr>
                         @endforeach
                     </tbody>

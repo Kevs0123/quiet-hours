@@ -60,9 +60,9 @@
 
         <div style="background:var(--cream);border-radius:8px;padding:12px 14px;
                     font-size:12px;color:var(--muted);margin-bottom:20px;">
-            ℹ️ The confirmation file cannot be changed here.
+            ℹ️ Payment details and confirmation status are managed on the booking detail page.
             <a href="{{ route('admin.bookings.show', $booking) }}" style="color:var(--navy);font-weight:600;">
-                View the uploaded file →
+                View payment &amp; confirm/reject →
             </a>
         </div>
 

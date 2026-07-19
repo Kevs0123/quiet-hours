@@ -8,9 +8,9 @@
     .home-page {
         min-height: calc(100vh - 68px);
         display: flex;
+        background: linear-gradient(135deg, #fcfaf6 0%, #f7efe2 100%);
     }
 
-    /* LEFT — form panel */
     .home-left {
         flex: 0 0 480px;
         background: #fff;
@@ -20,79 +20,99 @@
         justify-content: center;
     }
 
-    /* RIGHT — image */
     .home-right {
         flex: 1;
-        position: relative;
-        overflow: hidden;
-    }
-    .home-right img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center 40%;
-        display: block;
-    }
-    .home-right::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-            135deg,
-            rgba(10,18,40,0.50) 0%,
-            rgba(10,18,40,0.15) 60%,
-            rgba(10,18,40,0.40) 100%
-        );
-    }
-
-    /* Overlay text on image */
-    .home-img-overlay {
-        position: absolute;
-        inset: 0;
-        z-index: 2;
         display: flex;
-        flex-direction: column;
-        justify-content: center;
         align-items: center;
-        text-align: center;
-        padding: 40px;
-        color: #fff;
-    }
-    .home-img-overlay h2 {
-        font-family: 'Playfair Display', serif;
-        font-size: 36px;
-        color: #fff;
-        margin-bottom: 12px;
-        text-shadow: 0 2px 16px rgba(0,0,0,.5);
-        animation: fadeDown .6s ease both;
-    }
-    .home-img-overlay p {
-        font-size: 15px;
-        color: rgba(255,255,255,.82);
-        max-width: 340px;
-        line-height: 1.7;
-        margin-bottom: 28px;
-        animation: fadeDown .6s ease .1s both;
-    }
-    .home-img-tags {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
         justify-content: center;
-        animation: fadeUp .6s ease .2s both;
-    }
-    .home-img-tag {
-        background: rgba(255,255,255,.15);
-        border: 1px solid rgba(255,255,255,.30);
-        backdrop-filter: blur(8px);
-        color: #fff;
-        font-size: 12px;
-        font-weight: 600;
-        padding: 6px 14px;
-        border-radius: 20px;
+        padding: 32px;
+        background: linear-gradient(145deg, #f4e8d2 0%, #faf6ee 100%);
     }
 
-    /* LEFT panel styles */
+    .home-side-card {
+        width: 100%;
+        max-width: 420px;
+        background: rgba(255,255,255,0.92);
+        border: 1px solid #eadfcf;
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 18px 45px rgba(27,42,74,0.08);
+    }
+
+    .home-side-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: #fdf6ec;
+        border: 1px solid #e8c97a;
+        color: #a6833e;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        margin-bottom: 16px;
+    }
+
+    .home-side-card h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 26px;
+        color: #1b2a4a;
+        margin: 0 0 10px;
+    }
+
+    .home-side-card p {
+        font-size: 14px;
+        line-height: 1.7;
+        color: #6b6860;
+        margin-bottom: 18px;
+    }
+
+    .home-benefits {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 18px;
+        display: grid;
+        gap: 10px;
+    }
+
+    .home-benefits li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: #fff;
+        border: 1px solid #efe7da;
+        border-radius: 10px;
+        color: #31415a;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .home-benefits li::before {
+        content: '✓';
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #e8f5ee;
+        color: #2e7d32;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+
+    .home-highlight {
+        padding: 14px 16px;
+        background: #fdf6ec;
+        border: 1px solid #ead7ab;
+        border-radius: 12px;
+        color: #5b4c25;
+        font-size: 13px;
+    }
+
     .home-badge {
         display: inline-flex;
         align-items: center;
@@ -204,17 +224,15 @@
     .home-login-link a:hover { color: #c9a15a; }
 
     @media (max-width: 860px) {
-        .home-page { flex-direction: column-reverse; }
+        .home-page { flex-direction: column; }
         .home-left { flex: none; padding: 36px 24px; }
-        .home-right { min-height: 300px; flex: none; }
+        .home-right { padding: 24px; }
     }
 </style>
 
 <div class="home-page">
 
-    {{-- LEFT: booking start form --}}
     <div class="home-left">
-
         <div class="home-badge">🏨 Quiet Hours Hotel</div>
 
         <h1>Book Your Perfect Stay</h1>
@@ -248,24 +266,21 @@
                 for a faster experience.
             </div>
         </div>
-
     </div>
 
-    {{-- RIGHT: hotel image with overlay text --}}
     <div class="home-right">
-        <img
-            src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1400&q=85&auto=format&fit=crop"
-            alt="Quiet Hours Hotel lobby"
-            loading="eager"
-        >
-        <div class="home-img-overlay">
-            <h2>Experience Quiet Luxury</h2>
-            <p>From elegant rooms to world-class service — your perfect getaway starts here.</p>
-            <div class="home-img-tags">
-                <span class="home-img-tag">🛏 Premium Rooms</span>
-                <span class="home-img-tag">🍽 Fine Dining</span>
-                <span class="home-img-tag">🌊 Spa & Wellness</span>
-                <span class="home-img-tag">⭐ 5-Star Service</span>
+        <div class="home-side-card">
+            <div class="home-side-badge">Why guests choose us</div>
+            <h2>Comfort, clarity, and care</h2>
+            <p>Your booking journey stays simple from start to finish, with helpful guidance at every step.</p>
+            <ul class="home-benefits">
+                <li>Flexible room selection</li>
+                <li>Easy date planning</li>
+                <li>Fast confirmation upload</li>
+                <li>Clear booking summary</li>
+            </ul>
+            <div class="home-highlight">
+                <strong>Need help?</strong> Our team is ready to assist you with every reservation request.
             </div>
         </div>
     </div>

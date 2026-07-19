@@ -59,6 +59,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/bookings/{booking}/edit', [AdminController::class, 'editBooking'])->name('bookings.edit');
     Route::put('/bookings/{booking}',      [AdminController::class, 'updateBooking'])->name('bookings.update');
     Route::delete('/bookings/{booking}',   [AdminController::class, 'destroyBooking'])->name('bookings.destroy');
+    Route::post('/bookings/{booking}/confirm', [AdminController::class, 'confirmBooking'])->name('bookings.confirm');
+    Route::post('/bookings/{booking}/reject',  [AdminController::class, 'rejectBooking'])->name('bookings.reject');
+    Route::post('/bookings/bulk-confirm',      [AdminController::class, 'bulkConfirmBookings'])->name('bookings.bulk-confirm');
 
     // Clients CRUD
     Route::resource('clients', ClientController::class)->names([
@@ -106,6 +109,8 @@ Route::middleware('auth')->prefix('booking')->name('booking.')->group(function (
     Route::get('/reset', [BookingController::class, 'reset'])->name('reset');
     Route::get('/start/{customerName}', [BookingController::class, 'start'])->name('start');
     Route::get('/history', [BookingController::class, 'history'])->name('history');
+    Route::get('/history/{booking}', [BookingController::class, 'showBookingDetail'])->name('history.show');
+    Route::get('/history/{booking}/pdf', [BookingController::class, 'downloadBookingPdf'])->name('history.pdf');
     Route::get('/dashboard', [BookingController::class, 'dashboard'])->name('dashboard');
     Route::get('/room-availability/{room}', [BookingController::class, 'roomAvailability'])->name('room-availability');
 
@@ -115,13 +120,11 @@ Route::middleware('auth')->prefix('booking')->name('booking.')->group(function (
     });
 
     Route::middleware('booking.step:2')->group(function () {
-        Route::get('/confirmation',  [BookingController::class, 'showConfirmation'])->name('confirmation');
-        Route::post('/confirmation', [BookingController::class, 'storeConfirmation'])->name('confirmation.store');
+        Route::get('/payment',  [BookingController::class, 'showPayment'])->name('payment');
+        Route::post('/payment', [BookingController::class, 'storePayment'])->name('payment.store');
     });
 
     Route::middleware('booking.step:3')->group(function () {
         Route::get('/summary', [BookingController::class, 'summary'])->name('summary');
-        Route::get('/summary/file/view', [BookingController::class, 'viewConfirmationFile'])->name('summary.file.view');
-        Route::get('/summary/file/download', [BookingController::class, 'downloadConfirmationFile'])->name('summary.file.download');
     });
 });

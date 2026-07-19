@@ -216,6 +216,8 @@
         .badge-available::before { background: var(--success); }
         .badge-unavailable { background: #fde9e7; color: var(--danger); }
         .badge-unavailable::before { background: var(--danger); }
+        .badge-pending { background: #fdf6ec; color: var(--gold2); }
+        .badge-pending::before { background: var(--gold2); }
         .actions { display: flex; gap: 6px; align-items: center; }
         .wizard-steps { display: flex; gap: 0; margin-bottom: 36px; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(27,42,74,.08); }
         .wizard-step { flex: 1; padding: 13px 10px; text-align: center; font-size: 13px; font-weight: 600; background: var(--cream2); color: var(--muted); transition: background var(--trans), color var(--trans); }
@@ -310,9 +312,11 @@
         @endif
     </main>
 
+    @unless(request()->routeIs('home') || request()->routeIs('admin.*') || request()->routeIs('booking.*'))
     <footer class="site-footer">
         &copy; {{ date('Y') }} <a href="{{ route('home') }}">Quiet Hours Hotel</a> &mdash; A calm stay, every time.
     </footer>
+    @endunless
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

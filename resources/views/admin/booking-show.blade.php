@@ -3,11 +3,8 @@
 @section('content')
 
 @php
-    $nights  = $booking->check_in_date && $booking->check_out_date
+    $nights = $booking->check_in_date && $booking->check_out_date
                 ? $booking->check_in_date->diffInDays($booking->check_out_date) : 0;
-    $fileUrl = asset('storage/' . $booking->confirmation_file_path);
-    $isPdf   = strtolower($booking->confirmation_file_type) === 'pdf';
-    $isImage = in_array(strtolower($booking->confirmation_file_type), ['jpg','jpeg','png']);
 @endphp
 
 <div style="max-width:860px;margin:0 auto;">
@@ -16,10 +13,13 @@
     <div class="page-header" style="margin-bottom:20px;">
         <div>
             <h1 style="margin-bottom:4px;">Booking Details</h1>
-            <code style="background:var(--navy);color:#fff;padding:3px 12px;border-radius:6px;
-                         font-size:15px;letter-spacing:2px;font-weight:700;">
-                {{ $booking->booking_id }}
-            </code>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <code style="background:var(--navy);color:#fff;padding:3px 12px;border-radius:6px;
+                             font-size:15px;letter-spacing:2px;font-weight:700;">
+                    {{ $booking->booking_id }}
+                </code>
+                <span class="badge {{ $booking->statusBadgeClass() }}">{{ $booking->statusLabel() }}</span>
+            </div>
         </div>
         <div class="actions">
             <a href="{{ route('admin.bookings.edit', $booking) }}" class="btn btn-gold btn-sm">✏ Edit</a>
@@ -57,60 +57,68 @@
             @endforeach
         </div>
 
-        {{-- Right: file --}}
+        {{-- Right: payment + confirmation actions --}}
         <div class="card" style="padding:0;overflow:hidden;">
             <div style="padding:13px 18px;background:var(--cream);border-bottom:1px solid var(--cream2);
                         font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--navy);">
-                📎 Confirmation File
+                💳 Payment &amp; Confirmation
             </div>
-            <div style="padding:24px;text-align:center;">
-                @if($isPdf)
-                    <div style="width:72px;height:72px;background:linear-gradient(135deg,#ff5252,#c62828);
-                                border-radius:14px;display:flex;align-items:center;justify-content:center;
-                                margin:0 auto 14px;box-shadow:0 6px 20px rgba(198,40,40,.28);">
-                        <svg width="34" height="34" fill="#fff" viewBox="0 0 24 24">
-                            <path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/>
-                        </svg>
-                    </div>
-                    <div style="display:inline-flex;align-items:center;gap:5px;background:#fde9e7;
-                                color:#b3261e;font-size:11px;font-weight:700;padding:4px 12px;
-                                border-radius:20px;margin-bottom:12px;">📄 PDF File</div>
-                    <div style="font-size:13px;font-weight:700;color:var(--navy);word-break:break-all;margin-bottom:16px;">
-                        {{ basename($booking->confirmation_file_path) }}
-                    </div>
-                    <a href="{{ $fileUrl }}" target="_blank"
-                       style="display:flex;align-items:center;justify-content:center;gap:8px;
-                              padding:11px 18px;background:#c62828;color:#fff;font-size:14px;
-                              font-weight:700;border-radius:8px;text-decoration:none;margin-bottom:8px;">
-                        ⬇ Download PDF
-                    </a>
-                    <a href="{{ $fileUrl }}" target="_blank"
-                       style="display:flex;align-items:center;justify-content:center;gap:8px;
-                              padding:11px 18px;background:var(--cream);color:var(--navy);font-size:14px;
-                              font-weight:600;border-radius:8px;text-decoration:none;
-                              border:1.5px solid var(--cream2);">
-                        🔍 Open in Browser
-                    </a>
 
-                @elseif($isImage)
-                    <div style="border-radius:10px;overflow:hidden;border:1px solid var(--cream2);
-                                margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.08);">
-                        <img src="{{ $fileUrl }}" alt="Confirmation"
-                             style="width:100%;display:block;max-height:220px;object-fit:cover;">
+            @php
+            $payRows = [
+                ['💳','Method',      $booking->paymentMethodLabel()],
+                ['🔖','Reference',   $booking->payment_reference ?? '—'],
+                ['💰','Amount',      $booking->amount_paid ? '₱'.number_format($booking->amount_paid, 2) : '—'],
+            ];
+            @endphp
+            @foreach($payRows as $row)
+            <div style="display:flex;gap:10px;padding:12px 18px;border-bottom:1px solid var(--cream2);font-size:14px;">
+                <span style="font-size:15px;width:20px;text-align:center;flex-shrink:0;">{{ $row[0] }}</span>
+                <span style="color:var(--muted);min-width:100px;font-size:13px;">{{ $row[1] }}</span>
+                <span style="color:var(--navy);font-weight:600;">{{ $row[2] }}</span>
+            </div>
+            @endforeach
+
+            <div style="padding:20px 18px;">
+                @if($booking->isConfirmed())
+                    <div style="text-align:center;padding:10px 0;">
+                        <div style="font-size:32px;margin-bottom:8px;">✅</div>
+                        <div style="font-weight:700;color:var(--navy);margin-bottom:4px;">Confirmed</div>
+                        <div style="font-size:12px;color:var(--muted);">
+                            by {{ $booking->confirmedBy?->name ?? 'admin' }} on {{ $booking->confirmed_at?->format('M j, Y g:i A') }}
+                        </div>
                     </div>
-                    <a href="{{ $fileUrl }}" target="_blank"
-                       style="display:flex;align-items:center;justify-content:center;gap:8px;
-                              padding:11px 18px;background:var(--navy);color:#fff;font-size:14px;
-                              font-weight:700;border-radius:8px;text-decoration:none;margin-bottom:8px;">
-                        🔍 View Full Image
-                    </a>
-                    <a href="{{ $fileUrl }}" download
-                       style="display:flex;align-items:center;justify-content:center;gap:8px;
-                              padding:11px 18px;background:var(--cream);color:var(--navy);font-size:14px;
-                              font-weight:600;border-radius:8px;text-decoration:none;
-                              border:1.5px solid var(--cream2);">
-                        ⬇ Download Image
-                    </a>
+                @elseif($booking->isRejected())
+                    <div style="text-align:center;padding:10px 0;">
+                        <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
+                        <div style="font-weight:700;color:var(--navy);margin-bottom:8px;">Rejected</div>
+                        <div style="background:var(--cream);border-radius:8px;padding:10px 12px;font-size:13px;text-align:left;color:var(--ink);">
+                            {{ $booking->admin_notes }}
+                        </div>
+                    </div>
+                @else
+                    <form action="{{ route('admin.bookings.confirm', $booking) }}" method="POST" style="margin-bottom:10px;">
+                        @csrf
+                        <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center;">
+                            ✓ Confirm Booking
+                        </button>
+                    </form>
+                    <details>
+                        <summary style="cursor:pointer;font-size:13px;color:var(--danger);font-weight:600;">
+                            Reject this booking instead
+                        </summary>
+                        <form action="{{ route('admin.bookings.reject', $booking) }}" method="POST" style="margin-top:10px;">
+                            @csrf
+                            <div class="field" style="margin-bottom:10px;">
+                                <label>Reason for rejection</label>
+                                <textarea name="admin_notes" rows="3" placeholder="e.g. Payment reference could not be verified." required></textarea>
+                                @error('admin_notes')<span class="error-text">{{ $message }}</span>@enderror
+                            </div>
+                            <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center;">
+                                ✕ Reject Booking
+                            </button>
+                        </form>
+                    </details>
                 @endif
             </div>
         </div>

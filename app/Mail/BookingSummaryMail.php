@@ -27,7 +27,7 @@ class BookingSummaryMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your Quiet Hours Booking Confirmation — ' . $this->booking->booking_id,
+            subject: 'Payment Received — Booking ' . $this->booking->booking_id . ' Pending Confirmation',
         );
     }
  

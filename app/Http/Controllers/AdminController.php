@@ -79,16 +79,62 @@ class AdminController extends Controller
         ];
     }
 
-    public function bookings()
+    public function bookings(\Illuminate\Http\Request $request)
     {
-        $bookings = Booking::with(['user', 'room.category'])->latest()->paginate(15);
+        $status = $request->query('status');
 
-        return view('admin.bookings', compact('bookings'));
+        $query = Booking::with(['user', 'room.category'])->latest();
+
+        if (in_array($status, [Booking::STATUS_PENDING, Booking::STATUS_CONFIRMED, Booking::STATUS_REJECTED], true)) {
+            $query->where('status', $status);
+        }
+
+        $bookings = $query->paginate(15)->withQueryString();
+
+        return view('admin.bookings', compact('bookings', 'status'));
+    }
+
+    public function bulkConfirmBookings(\Illuminate\Http\Request $request)
+    {
+        $data = $request->validate([
+            'booking_ids'   => ['required', 'array', 'min:1'],
+            'booking_ids.*' => ['integer', 'exists:bookings,id'],
+        ]);
+
+        $bookings = Booking::whereIn('id', $data['booking_ids'])
+            ->where('status', Booking::STATUS_PENDING)
+            ->get();
+
+        foreach ($bookings as $booking) {
+            $booking->update([
+                'status'       => Booking::STATUS_CONFIRMED,
+                'confirmed_at' => now(),
+                'confirmed_by' => auth()->id(),
+                'admin_notes'  => null,
+            ]);
+
+            if ($booking->user?->email) {
+                try {
+                    $booking->load('room.category');
+                    \Illuminate\Support\Facades\Mail::to($booking->user->email)
+                        ->send(new \App\Mail\BookingConfirmationMail($booking));
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to send bulk booking confirmation email', [
+                        'booking_id' => $booking->booking_id,
+                        'error'      => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        $count = $bookings->count();
+
+        return back()->with('success', "Confirmed {$count} booking(s). Guests have been notified by email.");
     }
 
     public function showBooking(Booking $booking)
     {
-        $booking->load(['user', 'room.category']);
+        $booking->load(['user', 'room.category', 'confirmedBy']);
 
         return view('admin.booking-show', compact('booking'));
     }
@@ -118,13 +164,84 @@ class AdminController extends Controller
 
     public function destroyBooking(Booking $booking)
     {
-        // Delete the stored file from disk
-        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($booking->confirmation_file_path)) {
+        // Delete the stored file from disk, if this older booking has one
+        if ($booking->confirmation_file_path
+            && \Illuminate\Support\Facades\Storage::disk('public')->exists($booking->confirmation_file_path)
+        ) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete($booking->confirmation_file_path);
         }
 
         $booking->delete();
 
         return back()->with('success', 'Booking deleted successfully.');
+    }
+
+    /**
+     * Admin sign-off step: a booking only becomes "confirmed" — and only
+     * then does the client's summary page unlock the full confirmation +
+     * PDF — once an admin reviews the payment details and approves it here.
+     */
+    public function confirmBooking(Booking $booking)
+    {
+        $booking->update([
+            'status'       => Booking::STATUS_CONFIRMED,
+            'confirmed_at' => now(),
+            'confirmed_by' => auth()->id(),
+            'admin_notes'  => null,
+        ]);
+
+        if ($booking->user?->email) {
+            try {
+                $booking->load('room.category');
+                \Illuminate\Support\Facades\Mail::to($booking->user->email)
+                    ->send(new \App\Mail\BookingConfirmationMail($booking));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send booking confirmation email', [
+                    'booking_id' => $booking->booking_id,
+                    'error'      => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return back()->with('success', "Booking {$booking->booking_id} confirmed. The guest has been notified by email.");
+    }
+
+    public function rejectBooking(\Illuminate\Http\Request $request, Booking $booking)
+    {
+        $data = $request->validate([
+            'admin_notes' => ['required', 'string', 'min:5', 'max:500'],
+        ], [
+            'admin_notes.required' => 'Please explain why this booking is being rejected.',
+        ]);
+
+        $booking->update([
+            'status'       => Booking::STATUS_REJECTED,
+            'admin_notes'  => $data['admin_notes'],
+            'confirmed_at' => null,
+            'confirmed_by' => auth()->id(),
+        ]);
+
+        if ($booking->user?->email) {
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Hi {$booking->customer_name},\n\n".
+                    "Unfortunately your booking {$booking->booking_id} could not be confirmed.\n\n".
+                    "Reason: {$data['admin_notes']}\n\n".
+                    "Please contact us or start a new booking if you'd like to try again.\n\n".
+                    "— Quiet Hours Hotel",
+                    function ($message) use ($booking) {
+                        $message->to($booking->user->email)
+                            ->subject("Booking {$booking->booking_id} could not be confirmed");
+                    }
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send booking rejection email', [
+                    'booking_id' => $booking->booking_id,
+                    'error'      => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return back()->with('success', "Booking {$booking->booking_id} was rejected and the guest has been notified.");
     }
 }

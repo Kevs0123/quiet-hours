@@ -61,7 +61,7 @@
                         <th>Check-out</th>
                         <th>Nights</th>
                         <th>Persons</th>
-                        <th>File</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -83,15 +83,7 @@
                                 : '—' }}
                         </td>
                         <td>{{ $booking->number_of_persons }}</td>
-                        <td>
-                            @if(in_array($booking->confirmation_file_type, ['jpg','jpeg','png']))
-                                <a href="{{ asset('storage/'.$booking->confirmation_file_path) }}"
-                                   target="_blank" style="font-size:12px;">🖼 Image</a>
-                            @else
-                                <a href="{{ asset('storage/'.$booking->confirmation_file_path) }}"
-                                   target="_blank" style="font-size:12px;">📄 PDF</a>
-                            @endif
-                        </td>
+                        <td><span class="badge {{ $booking->statusBadgeClass() }}">{{ $booking->statusLabel() }}</span></td>
                         <td>
                             <div class="actions">
                                 <a href="{{ route('admin.bookings.show', $booking) }}"

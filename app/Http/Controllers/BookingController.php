@@ -2,8 +2,8 @@
  
 namespace App\Http\Controllers;
  
-use App\Http\Requests\BookingConfirmationRequest;
 use App\Http\Requests\BookingDetailsRequest;
+use App\Http\Requests\BookingPaymentRequest;
 use App\Mail\BookingSummaryMail;
 use App\Models\Booking;
 use App\Models\Room;
@@ -41,7 +41,7 @@ class BookingController extends Controller
             'booking.booking_id'    => $bookingId,
             'booking.step'          => 1,
         ]);
-        session()->forget(['booking.details', 'booking.confirmation', 'booking.record_id']);
+        session()->forget(['booking.details', 'booking.record_id']);
  
         return view('booking.start', [
             'customerName' => $customerName,
@@ -80,8 +80,8 @@ class BookingController extends Controller
         ]);
  
         return redirect()
-            ->route('booking.confirmation')
-            ->with('success', 'Booking details saved. Please upload your confirmation file.');
+            ->route('booking.payment')
+            ->with('success', 'Booking details saved. Please complete payment to reserve your room.');
     }
  
     /**
@@ -108,135 +108,94 @@ class BookingController extends Controller
         return response()->json(['booked' => $ranges]);
     }
  
-    public function showConfirmation()
+    /**
+     * Step 2: payment. Replaces the old "upload your confirmation file" step
+     * with a lightweight (mock) online-payment form -- the guest chooses a
+     * payment method and supplies the reference/transaction number, and the
+     * total due is computed live from the room rate and stay length.
+     */
+    public function showPayment()
     {
-        return view('booking.confirmation', [
+        $details = session('booking.details');
+        $nights  = 1;
+        $total   = null;
+
+        if ($details) {
+            $nights = max(
+                \Carbon\Carbon::parse($details['check_in_date'])->diffInDays(\Carbon\Carbon::parse($details['check_out_date'])),
+                1
+            );
+            if (isset($details['price_per_night'])) {
+                $total = $details['price_per_night'] * $nights;
+            }
+        }
+
+        return view('booking.payment', [
             'customerName' => session('booking.customer_name'),
             'bookingId'    => session('booking.booking_id'),
-            'details'      => session('booking.details'),
+            'details'      => $details,
+            'nights'       => $nights,
+            'total'        => $total,
         ]);
     }
- 
-    public function storeConfirmation(BookingConfirmationRequest $request)
+
+    public function storePayment(BookingPaymentRequest $request)
     {
-        $phpFileError = $_FILES['confirmation_file']['error'] ?? UPLOAD_ERR_NO_FILE;
- 
-        switch ($phpFileError) {
-            case UPLOAD_ERR_OK:
-                break; // good, continue
-            case UPLOAD_ERR_NO_FILE:
-                return back()->withErrors(['confirmation_file' => 'Please select a file to upload.']);
-            case UPLOAD_ERR_INI_SIZE:
-            case UPLOAD_ERR_FORM_SIZE:
-                return back()->withErrors(['confirmation_file' => 'The file is too large. Maximum size is 2 MB.']);
-            case UPLOAD_ERR_NO_TMP_DIR:
-                // Fallback: move manually to our own tmp dir
-                $tmpDir = storage_path('tmp');
-                if (! is_dir($tmpDir)) mkdir($tmpDir, 0755, true);
-                ini_set('upload_tmp_dir', $tmpDir);
-                // If still no file, show error
-                if (! $request->hasFile('confirmation_file')) {
-                    return back()->withErrors(['confirmation_file' => 'Server temp folder missing. Please contact support.']);
-                }
-                break;
-            default:
-                return back()->withErrors(['confirmation_file' => 'Upload failed. Please try again.']);
-        }
- 
-        $file = $request->file('confirmation_file');
- 
-        if (! $file || ! $file->isValid()) {
-            return back()->withErrors(['confirmation_file' => 'The file could not be read. Please try again.']);
-        }
- 
-        $maxBytes = 2 * 1024 * 1024;
-        $allowed  = ['pdf', 'jpg', 'jpeg', 'png'];
-        $ext      = strtolower($file->getClientOriginalExtension());
- 
-        if (! in_array($ext, $allowed)) {
-            return back()->withErrors(['confirmation_file' => 'Only PDF, JPG, and PNG files are allowed.']);
-        }
- 
-        if ($file->getSize() > $maxBytes) {
-            return back()->withErrors(['confirmation_file' => 'The file must not be larger than 2 MB.']);
-        }
- 
-        // Ensure destination folder exists
-        $destDir = storage_path('app/public/booking_confirmations');
-        if (! is_dir($destDir)) mkdir($destDir, 0755, true);
- 
-        // Generate explicit filename
-        $ext = strtolower($file->getClientOriginalExtension());
-        if (!$ext) {
-            return back()->withErrors(['confirmation_file' => 'Could not determine file type. Please try again.'])->withInput();
-        }
-        
+        $details   = session('booking.details');
         $bookingId = session('booking.booking_id');
-        if (!$bookingId) {
-            return back()->withErrors(['confirmation_file' => 'Session expired. Please start over.'])->withInput();
+
+        if (! $details || ! $bookingId) {
+            return redirect()->route('booking.home')->with('error', 'Session expired. Please start over.');
         }
-        
-        $filename = $bookingId . '_' . time() . '.' . $ext;
-        $fullPath = $destDir . '/' . $filename;
-        
-        try {
-            // Move file using the UploadedFile move method
-            $file->move($destDir, $filename);
-            
-            // Store relative path for database
-            $path = 'booking_confirmations/' . $filename;
-        } catch (\Exception $e) {
-            return back()
-                ->withErrors(['confirmation_file' => 'The file could not be saved. Please try again.'])
-                ->withInput();
-        }
- 
-        $type = $ext;
-        $details = session('booking.details');
- 
+
+        $nights = max(
+            \Carbon\Carbon::parse($details['check_in_date'])->diffInDays(\Carbon\Carbon::parse($details['check_out_date'])),
+            1
+        );
+        $amount = isset($details['price_per_night']) ? $details['price_per_night'] * $nights : null;
+
         $booking = Booking::create([
             'user_id'                => Auth::id(),
             'room_id'                => $details['room_id'],
             'customer_name'          => session('booking.customer_name'),
-            'booking_id'             => session('booking.booking_id'),
+            'booking_id'             => $bookingId,
             'event_name'             => $details['event_name'],
             'check_in_date'          => $details['check_in_date'],
             'check_out_date'         => $details['check_out_date'],
             'number_of_persons'      => $details['number_of_persons'],
-            'confirmation_file_path' => $path,
-            'confirmation_file_type' => $type,
+            'confirmation_file_path' => '',
+            'confirmation_file_type' => '',
+            'payment_method'         => $request->payment_method,
+            'payment_reference'      => $request->payment_reference,
+            'amount_paid'            => $amount,
+            'status'                 => Booking::STATUS_PENDING,
         ]);
- 
+
         session([
-            'booking.confirmation' => [
-                'path'          => $path,
-                'type'          => $type,
-                'original_name' => $file->getClientOriginalName(),
-            ],
             'booking.record_id' => $booking->id,
             'booking.step'      => 3,
         ]);
- 
+
         $this->sendBookingSummaryEmail($booking);
- 
+
         return redirect()
             ->route('booking.summary')
-            ->with('success', 'Booking confirmed! Here is your summary.');
+            ->with('success', 'Payment received! Your booking is now awaiting admin confirmation.');
     }
- 
+
     /**
-     * Emails the full booking summary (with confirmation file attached, if any)
-     * to the account's Gmail address via SMTP. Failures are logged but never
-     * block the booking flow — the reservation is already saved at this point.
+     * Emails the booking summary (payment received, pending admin review)
+     * to the account's registered email address. Failures are logged but
+     * never block the booking flow -- the reservation is already saved.
      */
     protected function sendBookingSummaryEmail(Booking $booking): void
     {
         $recipient = Auth::user()?->email;
- 
+
         if (! $recipient) {
             return;
         }
- 
+
         try {
             $booking->load('room.category');
             Mail::to($recipient)->send(new BookingSummaryMail($booking));
@@ -248,14 +207,22 @@ class BookingController extends Controller
             ]);
         }
     }
- 
+
+    /**
+     * Step 3 (final): summary. Its content adapts to the booking's live
+     * status -- pending, admin-confirmed, or admin-rejected -- since
+     * confirmation now happens on the admin side, not automatically.
+     */
     public function summary()
     {
+        $booking = Booking::with('room.category')->find(session('booking.record_id'));
+
+        if (! $booking) {
+            return redirect()->route('booking.home')->with('error', 'We could not find that booking. Please start over.');
+        }
+
         return view('booking.summary', [
-            'customerName' => session('booking.customer_name'),
-            'bookingId'    => session('booking.booking_id'),
-            'details'      => session('booking.details'),
-            'confirmation' => session('booking.confirmation'),
+            'booking' => $booking,
         ]);
     }
  
@@ -329,36 +296,36 @@ class BookingController extends Controller
         ]);
     }
  
-    public function viewConfirmationFile()
+    /**
+     * Session-independent version of the summary page, reachable from
+     * Booking History at any time (not just right after the wizard) -- the
+     * booking-step session flow above can expire, but a guest should always
+     * be able to check whether their booking has been confirmed yet.
+     */
+    public function showBookingDetail(Booking $booking)
     {
-        $confirmation = session('booking.confirmation');
-        if (! $confirmation || empty($confirmation['path'])) {
-            abort(404, 'Confirmation file not found.');
-        }
- 
-        $path = $confirmation['path'];
-        if (! Storage::disk('public')->exists($path)) {
-            abort(404, 'Confirmation file not found.');
-        }
- 
-        return Storage::disk('public')->response($path);
+        $this->authorize('view', $booking);
+
+        $booking->load('room.category');
+
+        return view('booking.summary', compact('booking'));
     }
- 
-    public function downloadConfirmationFile()
+
+    public function downloadBookingPdf(Booking $booking)
     {
-        $confirmation = session('booking.confirmation');
-        if (! $confirmation || empty($confirmation['path']) || empty($confirmation['original_name'])) {
-            abort(404, 'Confirmation file not found.');
+        $this->authorize('view', $booking);
+
+        if (! $booking->isConfirmed()) {
+            abort(404, 'A confirmed booking PDF is not available yet.');
         }
- 
-        $path = $confirmation['path'];
-        if (! Storage::disk('public')->exists($path)) {
-            abort(404, 'Confirmation file not found.');
-        }
- 
-        return Storage::disk('public')->download($path, $confirmation['original_name']);
+
+        $booking->load('room.category');
+
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.booking-confirmation', [
+            'booking' => $booking,
+        ])->download("Booking-{$booking->booking_id}.pdf");
     }
- 
+
     public function reset()
     {
         session()->forget([
@@ -366,7 +333,6 @@ class BookingController extends Controller
             'booking.booking_id',
             'booking.step',
             'booking.details',
-            'booking.confirmation',
             'booking.record_id',
         ]);
  

@@ -17,13 +17,13 @@
         </td>
     </tr>
  
-    {{-- Success banner --}}
+    {{-- Status banner --}}
     <tr>
         <td style="padding:24px 32px 0;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#e8f5ee;border:1px solid #bddecb;border-radius:8px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fdf6ec;border:1px solid #ead7ab;border-radius:8px;">
                 <tr>
-                    <td style="padding:14px 18px;font-size:14px;color:#1a5c32;">
-                        ✅ &nbsp;<strong>Booking Complete!</strong> Your reservation has been successfully processed. Keep your Booking ID for reference.
+                    <td style="padding:14px 18px;font-size:14px;color:#7a5c1e;">
+                        ⏳ &nbsp;<strong>Payment Received!</strong> Your booking is now pending confirmation from our team. We'll email you as soon as it's confirmed. Keep your Booking ID for reference.
                     </td>
                 </tr>
             </table>
@@ -81,23 +81,29 @@
                     <td style="padding:10px 0;color:#7a7568;">Guests</td>
                     <td style="padding:10px 0;font-weight:bold;">{{ $booking->number_of_persons }} {{ $booking->number_of_persons == 1 ? 'guest' : 'guests' }}</td>
                 </tr>
+                <tr>
+                    <td style="padding:10px 0;color:#7a7568;">Payment Method</td>
+                    <td style="padding:10px 0;font-weight:bold;">{{ $booking->paymentMethodLabel() }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:10px 0;color:#7a7568;">Reference No.</td>
+                    <td style="padding:10px 0;font-weight:bold;font-family:monospace;">{{ $booking->payment_reference ?? '—' }}</td>
+                </tr>
             </table>
         </td>
     </tr>
- 
-    @if($booking->confirmation_file_path)
+
     <tr>
         <td style="padding:20px 32px 0;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea;border-radius:8px;">
                 <tr>
                     <td style="padding:12px 16px;font-size:13px;color:#1b2a4a;">
-                        📎 &nbsp;Your confirmation file is attached to this email.
+                        🔎 &nbsp;Our team will verify your payment shortly. You'll get a follow-up email — with a downloadable confirmation PDF — once it's approved.
                     </td>
                 </tr>
             </table>
         </td>
     </tr>
-    @endif
  
     {{-- Footer --}}
     <tr>

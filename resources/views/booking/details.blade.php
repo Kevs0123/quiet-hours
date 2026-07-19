@@ -5,50 +5,139 @@
 <style>
     .booking-hero {
         position: relative;
-        height: 340px;
         overflow: hidden;
-        margin-bottom: 32px;
-        background: linear-gradient(
-            to bottom,
-            rgba(10,18,40,0.05) 0%,
-            rgba(10,18,40,0.08) 50%,
-            rgba(10,18,40,0.15) 100%
-        ), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1400&q=85&auto=format&fit=crop');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
+        margin-bottom: 24px;
+        padding: 28px 30px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #1b2a4a 0%, #2b426f 100%);
+        color: #fff;
+        box-shadow: 0 16px 40px rgba(27,42,74,0.12);
     }
+    .booking-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top right, rgba(201,161,90,0.28), transparent 35%);
+        pointer-events: none;
+    }
+    .booking-hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 760px;
+    }
+    .booking-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.16);
+        border: 1px solid rgba(255,255,255,0.25);
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+    .booking-hero h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        color: #fff;
+    }
+    .booking-hero p {
+        margin: 0;
+        color: rgba(255,255,255,0.86);
+        line-height: 1.6;
+        font-size: 14px;
+    }
+    .booking-shell {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 24px;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(27,42,74,0.05);
+    }
+    .booking-intro {
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #efe7da;
+    }
+    .booking-intro h2 {
+        margin: 0 0 6px;
+        color: #1b2a4a;
+        font-size: 22px;
+    }
+    .booking-intro p {
+        margin: 0;
+        color: #6b6860;
+        font-size: 14px;
+    }
+    .booking-tip {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        background: #fdf6ec;
+        border: 1px solid #ead7ab;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 18px;
+        color: #5b4c25;
+        font-size: 13px;
+    }
+    .booking-tip strong { color: #1b2a4a; }
+    .room-picker-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin-bottom:6px; }
+    .room-card { position:relative; border:2px solid var(--cream2); border-radius:12px; overflow:hidden; cursor:pointer; background:#fff; transition:border-color .2s, transform .15s, box-shadow .2s; }
+    .room-card:hover { border-color:var(--gold); transform:translateY(-2px); box-shadow:0 10px 24px rgba(27,42,74,0.06); }
+    .room-card.selected { border-color:var(--gold); box-shadow:0 0 0 2px rgba(201,161,90,.35); }
+    .room-card img { width:100%; height:100px; object-fit:cover; display:block; background:var(--cream2); }
+    .room-card-body { padding:10px 12px; }
+    .room-card-check { position:absolute; top:8px; right:8px; width:24px; height:24px; border-radius:50%; background:var(--gold); color:var(--navy); font-size:13px; font-weight:700; display:none; align-items:center; justify-content:center; }
+    .room-card.selected .room-card-check { display:flex; }
     @media (max-width: 768px) {
-        .booking-hero { height: 260px; background-attachment: scroll; }
+        .booking-hero { padding: 22px; }
+        .booking-shell { padding: 18px; }
+        .room-picker-grid { grid-template-columns:1fr 1fr; }
     }
     @media (max-width: 480px) {
-        .booking-hero { height: 200px; background-attachment: scroll; }
+        .room-picker-grid { grid-template-columns:1fr; }
     }
 </style>
 
-<div class="booking-hero"></div>
+<div class="booking-hero">
+    <div class="booking-hero-content">
+        <div class="booking-pill">Step 1 of 4</div>
+        <h1>Choose your room and stay details</h1>
+        <p>Pick a room, set your dates, and tell us how many guests will be joining you.</p>
+    </div>
+</div>
 
-<div class="card" style="max-width:1000px;margin:0 auto;">
+<div class="card booking-shell">
     <div class="wizard-steps">
         <div class="wizard-step done"><span class="step-num">✓</span><span class="step-label">Welcome</span></div>
         <div class="wizard-step active"><span class="step-num">2</span><span class="step-label">Details</span></div>
-        <div class="wizard-step"><span class="step-num">3</span><span class="step-label">Confirmation</span></div>
+        <div class="wizard-step"><span class="step-num">3</span><span class="step-label">Payment</span></div>
         <div class="wizard-step"><span class="step-num">4</span><span class="step-label">Summary</span></div>
     </div>
 
-    <h1 style="margin-bottom:6px;">Step 1: Booking Details</h1>
-    <p style="margin-bottom:28px;">Select your room and fill in your stay details.</p>
+    <div class="booking-intro">
+        <h2>Room & stay details</h2>
+        <p>Everything you need is on this page. Select a room, choose your dates, and continue when you are ready.</p>
+    </div>
+
+    <div class="booking-tip">
+        <span style="font-size:16px;">💡</span>
+        <div><strong>Helpful tip:</strong> Once you pick a room, the available dates update automatically and the form stays easy to follow.</div>
+    </div>
 
     <form action="{{ route('booking.details.store') }}" method="POST" novalidate>
         @csrf
 
-        {{-- Customer Name — read-only --}}
         <div class="field">
             <label>Customer Name</label>
             <input type="text" value="{{ $customerName }}" readonly>
         </div>
 
-        {{-- Auto-generated Booking ID --}}
         <div class="field">
             <label>Booking Reference ID
                 <span style="font-weight:400;text-transform:none;font-size:12px;color:var(--muted);">(auto-generated)</span>
@@ -60,7 +149,6 @@
             </div>
         </div>
 
-        {{-- Room selector — visual card grid grouped by category --}}
         <div class="field">
             <label>Select Room <span style="color:var(--danger);">*</span></label>
 
@@ -98,7 +186,6 @@
                 <span class="error-text">{{ $message }}</span>
             @enderror
 
-            {{-- Room info card shown after selection --}}
             <div id="room-info"
                  style="display:none;margin-top:14px;background:var(--cream);border-radius:8px;padding:12px 16px;font-size:13px;border-left:3px solid var(--gold);">
                 <div style="display:flex;gap:20px;flex-wrap:wrap;">
@@ -109,18 +196,6 @@
             </div>
         </div>
 
-        <style>
-            .room-picker-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; margin-bottom:6px; }
-            .room-card { position:relative; border:2px solid var(--cream2); border-radius:10px; overflow:hidden; cursor:pointer; background:#fff; transition:border-color .2s, transform .15s; }
-            .room-card:hover { border-color:var(--gold); transform:translateY(-2px); }
-            .room-card.selected { border-color:var(--gold); box-shadow:0 0 0 2px rgba(201,161,90,.35); }
-            .room-card img { width:100%; height:90px; object-fit:cover; display:block; background:var(--cream2); }
-            .room-card-body { padding:8px 10px; }
-            .room-card-check { position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%; background:var(--gold); color:var(--navy); font-size:13px; font-weight:700; display:none; align-items:center; justify-content:center; }
-            .room-card.selected .room-card-check { display:flex; }
-        </style>
-
-        {{-- Check-in / Check-out with Calendar Only Selection --}}
         <div id="availability-legend" style="display:none;margin-bottom:10px;font-size:12px;color:var(--muted);background:var(--cream);border-radius:6px;padding:8px 12px;">
             🚫 Greyed-out / strikethrough dates on the calendar below are already booked for this room and can't be selected.
         </div>
@@ -159,13 +234,11 @@
             </div>
         </div>
 
-        {{-- Duration display --}}
         <div id="duration-display"
              style="display:none;margin:-8px 0 18px;font-size:13px;color:var(--success);font-weight:600;">
             📅 <span id="duration-text"></span>
         </div>
 
-        {{-- Number of Persons --}}
         <div class="field">
             <label>Number of Persons <span style="color:var(--danger);">*</span>
                 <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--muted);">(min. 1)</span>
@@ -185,7 +258,7 @@
             <a href="{{ route('booking.start', ['customerName' => $customerName]) }}"
                class="btn btn-outline">&larr; Back</a>
             <button type="submit" class="btn btn-gold" style="flex:1;justify-content:center;">
-                Continue to Upload &rarr;
+                Continue to Payment &rarr;
             </button>
         </div>
     </form>
