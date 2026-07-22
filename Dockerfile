@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 
-FROM composer:2.7-php8.4 AS vendor
+FROM composer:2 AS vendor
 WORKDIR /app
-COPY . .
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+COPY composer.json composer.lock ./
+RUN composer install --ignore-platform-req=php --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 FROM node:20 AS assets
 WORKDIR /app
