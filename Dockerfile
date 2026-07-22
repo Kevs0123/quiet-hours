@@ -2,7 +2,7 @@
 
 FROM composer:2 AS vendor
 WORKDIR /app
-COPY composer.json composer.lock ./
+COPY . .
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 FROM node:20 AS assets
