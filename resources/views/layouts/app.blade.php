@@ -267,7 +267,13 @@
                     <a href="{{ route('admin.clients.index') }}" @class(['active' => request()->routeIs('admin.clients.*')])>👥 Clients</a>
                     <a href="{{ route('admin.categories.index') }}" @class(['active' => request()->routeIs('admin.categories.*')])>🗂 Categories</a>
                     <a href="{{ route('admin.rooms.index') }}" @class(['active' => request()->routeIs('admin.rooms.*')])>🛏 Rooms</a>
-                    <a href="{{ route('admin.bookings') }}" @class(['active' => request()->routeIs('admin.bookings*')])>📋 Bookings</a>
+                    <a href="{{ route('admin.bookings') }}" @class(['active' => request()->routeIs('admin.bookings*')])>
+                        📋 Bookings
+                        @php $pendingCount = \App\Models\Booking::where('status', \App\Models\Booking::STATUS_PENDING)->count(); @endphp
+                        @if($pendingCount)
+                            <span style="margin-left:6px;padding:2px 7px;background:#f59e0b;color:#102a43;border-radius:999px;font-size:11px;font-weight:700;">{{ $pendingCount }}</span>
+                        @endif
+                    </a>
                 @else
                     <a href="{{ route('booking.dashboard') }}" @class(['active' => request()->routeIs('booking.dashboard')])>📊 Dashboard</a>
                     <a href="{{ route('booking.home') }}" @class(['active' => request()->routeIs('booking.home')])>🛏 My Booking</a>

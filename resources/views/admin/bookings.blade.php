@@ -41,6 +41,11 @@
         <a href="{{ route('admin.bookings', ['status' => 'rejected']) }}" class="status-tab @if($status === 'rejected') active @endif">Rejected</a>
     </div>
 
+    <form action="{{ route('admin.bookings.notify-pending') }}" method="POST" style="margin-bottom:16px;">
+        @csrf
+        <button type="submit" class="btn btn-primary btn-sm">Notify All Pending Clients</button>
+    </form>
+
     @if($bookings->isNotEmpty())
     <form id="bulk-form" action="{{ route('admin.bookings.bulk-confirm') }}" method="POST">
         @csrf
@@ -98,6 +103,10 @@
                                     <form action="{{ route('admin.bookings.confirm', $booking) }}" method="POST" style="display:inline;">
                                         @csrf
                                         <button type="submit" class="btn btn-gold btn-sm">Confirm</button>
+                                    </form>
+                                    <form action="{{ route('admin.bookings.notify', $booking) }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline btn-sm">Notify</button>
                                     </form>
                                 @endif
                                 <a href="{{ route('admin.bookings.edit', $booking) }}"

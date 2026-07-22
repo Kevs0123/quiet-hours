@@ -28,6 +28,9 @@ class BookingConfirmationMail extends Mailable
     {
         return new Content(
             view: 'emails.booking-confirmation',
+            with: [
+                'booking' => $this->booking,
+            ],
         );
     }
 

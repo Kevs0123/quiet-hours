@@ -132,6 +132,12 @@
 <div class="dashboard-header">
     <h1>Admin Dashboard</h1>
     <p>Welcome back, Admin. Here's your hotel overview.</p>
+    @if($pendingBookingsCount)
+        <div style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:999px;background:#f59e0b;color:#fff;font-weight:700;">!</span>
+            <span style="font-size:14px;color:var(--navy);">You have <strong>{{ $pendingBookingsCount }}</strong> booking(s) pending confirmation.</span>
+        </div>
+    @endif
 </div>
 
 {{-- Stats Grid --}}

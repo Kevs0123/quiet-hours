@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BookingSummaryMail;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\RoomCategory;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -43,8 +47,9 @@ class AdminController extends Controller
             ->values();
 
         return view('admin.dashboard', array_merge($this->statCounts(), [
-            'recentBookings'  => Booking::with('user')->latest()->take(8)->get(),
-            'calendarEvents'  => $calendarEvents->toJson(),
+            'pendingBookingsCount' => Booking::where('status', Booking::STATUS_PENDING)->count(),
+            'recentBookings'       => Booking::with('user')->latest()->take(8)->get(),
+            'calendarEvents'       => $calendarEvents->toJson(),
         ]));
     }
 
@@ -70,12 +75,13 @@ class AdminController extends Controller
         }
 
         return [
-            'totalBookings'    => Booking::count(),
-            'totalRooms'       => Room::count(),
-            'totalCategories'  => RoomCategory::count(),
-            'totalClients'     => User::where('role', 'client')->count(),
-            'totalUsers'       => User::count(),
-            'totalBookedDates' => $totalBookedDates,
+            'totalBookings'         => Booking::count(),
+            'totalRooms'            => Room::count(),
+            'totalCategories'       => RoomCategory::count(),
+            'totalClients'          => User::where('role', 'client')->count(),
+            'totalUsers'            => User::count(),
+            'totalBookedDates'      => $totalBookedDates,
+            'pendingBookingsCount'  => Booking::where('status', Booking::STATUS_PENDING)->count(),
         ];
     }
 
@@ -126,6 +132,61 @@ class AdminController extends Controller
         $booking->load(['user', 'room.category', 'confirmedBy']);
 
         return view('admin.booking-show', compact('booking'));
+    }
+
+    public function notifyBooking(Booking $booking)
+    {
+        if (! $booking->isPending()) {
+            return back()->with('error', 'Only pending bookings can be notified.');
+        }
+
+        if (! $booking->user?->email) {
+            return back()->with('error', 'This booking has no customer email on file.');
+        }
+
+        try {
+            $booking->load('room.category');
+            Mail::to($booking->user->email)->send(new BookingSummaryMail($booking));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send pending booking notification', [
+                'booking_id' => $booking->booking_id,
+                'email'      => $booking->user->email,
+                'error'      => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Could not send reminder email to the client.');
+        }
+
+        return back()->with('success', 'Notification sent to the client for pending booking ' . $booking->booking_id . '.');
+    }
+
+    public function notifyPendingBookings(Request $request)
+    {
+        $pendingBookings = Booking::where('status', Booking::STATUS_PENDING)
+            ->whereNotNull('user_id')
+            ->with('user', 'room.category')
+            ->get();
+
+        $count = 0;
+
+        foreach ($pendingBookings as $booking) {
+            if (! $booking->user?->email) {
+                continue;
+            }
+
+            try {
+                Mail::to($booking->user->email)->send(new BookingSummaryMail($booking));
+                $count++;
+            } catch (\Throwable $e) {
+                Log::error('Failed to send pending booking notification', [
+                    'booking_id' => $booking->booking_id,
+                    'email'      => $booking->user->email,
+                    'error'      => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return back()->with('success', "Sent pending booking reminders to {$count} client(s). Please note only clients with valid email addresses were notified.");
     }
 
     public function editBooking(Booking $booking)
@@ -186,6 +247,10 @@ class AdminController extends Controller
 
     private function sendBookingConfirmationEmails(Booking $booking): void
     {
+        if (! $booking->isConfirmed()) {
+            return;
+        }
+
         $booking->load('room.category');
 
         $recipientEmails = [];

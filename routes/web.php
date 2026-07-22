@@ -65,6 +65,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/bookings/{booking}',   [AdminController::class, 'destroyBooking'])->name('bookings.destroy');
     Route::post('/bookings/{booking}/confirm', [AdminController::class, 'confirmBooking'])->name('bookings.confirm');
     Route::post('/bookings/{booking}/reject',  [AdminController::class, 'rejectBooking'])->name('bookings.reject');
+    Route::post('/bookings/{booking}/notify',  [AdminController::class, 'notifyBooking'])->name('bookings.notify');
+    Route::post('/bookings/notify-pending',    [AdminController::class, 'notifyPendingBookings'])->name('bookings.notify-pending');
     Route::post('/bookings/bulk-confirm',      [AdminController::class, 'bulkConfirmBookings'])->name('bookings.bulk-confirm');
 
     // Clients CRUD

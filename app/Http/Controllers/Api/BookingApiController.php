@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Mail\BookingConfirmationMail;
+use App\Mail\BookingSummaryMail;
 use App\Models\Booking;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\Rule;
 
 class BookingApiController extends Controller
 {
@@ -112,7 +111,7 @@ class BookingApiController extends Controller
 
         $booking->load('room.category', 'user');
 
-        Mail::to($booking->user->email)->send(new BookingConfirmationMail($booking));
+        Mail::to($booking->user->email)->send(new BookingSummaryMail($booking));
 
         return response()->json([
             'message' => 'Booking summary has been emailed to ' . $booking->user->email,
