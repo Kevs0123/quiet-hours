@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\VerificationCodeMail;
 
 class AuthController extends Controller
 {
@@ -41,6 +43,14 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+
+        if (! $user->isAdmin() && ! $user->hasVerifiedEmail()) {
+            // log the user out and send a verification code for non-admin accounts
+            Auth::logout();
+            $this->generateAndSendCode($user);
+            return redirect()->route('verify', ['email' => $user->email])
+                ->with('success', 'A verification code was sent to your email. Please enter it to continue.');
+        }
 
         return $this->redirectByRole($user)
             ->with('success', 'Welcome back, ' . $user->name . '!');
@@ -89,11 +99,82 @@ class AuthController extends Controller
             'role'     => 'client',
         ]);
 
+        // generate & send code, do NOT auto-login until verified
+        $this->generateAndSendCode($user);
+
+        return redirect()->route('verify', ['email' => $user->email])
+            ->with('success', 'Account created. Please check your email for the verification code.');
+    }
+
+    public function showVerify(Request $request)
+    {
+        return view('auth.verify');
+    }
+
+    public function verify(Request $request)
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+            'code'  => ['required', 'digits:6'],
+        ]);
+
+        $user = User::where('email', $data['email'])->first();
+        if (! $user) {
+            return back()->withErrors(['email' => 'No account found with this email.']);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            Auth::login($user);
+            return redirect()->route('home')->with('success', 'Email already verified.');
+        }
+
+        if (
+            $user->verification_code !== $data['code'] ||
+            ! $user->verification_code_expires_at ||
+            $user->verification_code_expires_at->isPast()
+        ) {
+            return back()->withErrors(['code' => 'Invalid or expired verification code.']);
+        }
+
+        $user->forceFill([
+            'email_verified_at'            => now(),
+            'verification_code'            => null,
+            'verification_code_expires_at' => null,
+        ])->save();
+
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('home')
-            ->with('success', 'Account created! Welcome, ' . $user->name . '.');
+        return $this->redirectByRole($user)->with('success', 'Email verified successfully.');
+    }
+
+    public function resendCode(Request $request)
+    {
+        $request->validate(['email' => ['required', 'email']]);
+        $user = User::where('email', $request->email)->first();
+        if (! $user) {
+            return back()->withErrors(['email' => 'No account found with this email.']);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return back()->with('success', 'Email already verified.');
+        }
+
+        $this->generateAndSendCode($user);
+
+        return back()->with('success', 'A new verification code has been sent to your email.');
+    }
+
+    private function generateAndSendCode(User $user): void
+    {
+        $code = (string) random_int(100000, 999999);
+
+        $user->forceFill([
+            'verification_code'            => $code,
+            'verification_code_expires_at' => now()->addMinutes(10),
+        ])->save();
+
+        Mail::to($user->email)->send(new VerificationCodeMail($user->name, $code));
     }
 
     /*

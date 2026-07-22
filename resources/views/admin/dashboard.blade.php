@@ -86,6 +86,28 @@
         color: var(--gold);
     }
 
+    .calendar-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    .calendar-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+    }
+
+    .calendar-legend-swatch {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
     .actions-bar {
         display: flex;
         gap: 12px;
@@ -171,9 +193,13 @@
         <div>
             <h2 style="margin:0;">Booking Calendar</h2>
             <p style="margin:0;font-size:12px;color:var(--muted);margin-top:6px;">
-                Shows all booked dates with room categories. 
-                <span style="background:#c9a86a;color:#fff;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:600;">Booked by guests</span>
+                Shows all booked dates with room categories.
             </p>
+            <div class="calendar-legend">
+                <span class="calendar-legend-item"><span class="calendar-legend-swatch" style="background:#f59e0b;"></span>Pending</span>
+                <span class="calendar-legend-item"><span class="calendar-legend-swatch" style="background:#22c55e;"></span>Confirmed</span>
+                <span class="calendar-legend-item"><span class="calendar-legend-swatch" style="background:#ef4444;"></span>Rejected</span>
+            </div>
         </div>
     </div>
 

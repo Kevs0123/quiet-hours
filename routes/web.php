@@ -21,7 +21,6 @@ Route::get('/', function () {
     $featuredRooms = \App\Models\Room::with('category')
         ->where('is_available', true)
         ->orderBy('price_per_night')
-        ->take(6)
         ->get();
 
     return view('welcome', compact('categories', 'featuredRooms'));
@@ -37,6 +36,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/login',    [AuthController::class, 'login'])->name('login.post');
     Route::get('/register',  [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+    
+    // Email verification (allow guests to verify)
+    Route::get('/verify', [AuthController::class, 'showVerify'])->name('verify');
+    Route::post('/verify', [AuthController::class, 'verify'])->name('verify.post');
+    Route::post('/verify/resend', [AuthController::class, 'resendCode'])->name('verify.resend');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])
@@ -86,6 +90,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         'update'  => 'categories.update',
         'destroy' => 'categories.destroy',
     ]);
+
+    // Email verification (simple code flow)
+    
 
     // Rooms CRUD
     Route::resource('rooms', RoomController::class)->names([

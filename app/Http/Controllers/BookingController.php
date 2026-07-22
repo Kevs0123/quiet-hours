@@ -30,7 +30,7 @@ class BookingController extends Controller
         return view('booking.home');
     }
  
-    public function start(string $customerName)
+    public function start(\Illuminate\Http\Request $request, string $customerName)
     {
         do {
             $bookingId = strtoupper(Str::random(8));
@@ -42,6 +42,26 @@ class BookingController extends Controller
             'booking.step'          => 1,
         ]);
         session()->forget(['booking.details', 'booking.record_id']);
+
+        // If a room id was provided from the home page, prefill the booking
+        // details in session so the Details step shows the selected room.
+        $roomId = $request->query('room_id');
+        if ($roomId) {
+            $room = Room::with('category')->find($roomId);
+            if ($room) {
+                session(["booking.details" => [
+                    'room_id' => $room->id,
+                    'event_name' => $room->name,
+                    'room_name' => $room->name,
+                    'category_name' => $room->category?->name,
+                    'price_per_night' => $room->price_per_night,
+                    // keep dates empty so user still picks them
+                    'check_in_date' => null,
+                    'check_out_date' => null,
+                    'number_of_persons' => 1,
+                ]]);
+            }
+        }
  
         return view('booking.start', [
             'customerName' => $customerName,

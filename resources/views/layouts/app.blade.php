@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Quiet Hours') &mdash; Quiet Hours Hotel</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -57,10 +59,14 @@
         }
         .brand-icon {
             width: 34px; height: 34px;
-            background: var(--gold);
             border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px;
+            overflow: hidden;
+            display: inline-block;
+            flex-shrink: 0;
+            background: transparent;
+        }
+        .brand-icon-img {
+            width: 100%; height: 100%; display: block; object-fit: cover;
         }
         .brand span { color: var(--gold); }
         .site-nav { display: flex; align-items: center; gap: 6px; }
@@ -249,7 +255,9 @@
 <body>
     <header class="site-header">
         <a href="{{ route('home') }}" class="brand">
-            <div class="brand-icon">🏨</div>
+            <div class="brand-icon">
+                <img src="{{ asset('favicon.svg') }}" alt="Quiet Hours" class="brand-icon-img">
+            </div>
             QUIET <span>&nbsp;HOURS</span>
         </a>
         <nav class="site-nav">

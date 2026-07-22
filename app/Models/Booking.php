@@ -94,6 +94,15 @@ class Booking extends Model
         };
     }
 
+    public function calendarColor(): string
+    {
+        return match ($this->status) {
+            self::STATUS_CONFIRMED => '#22c55e',
+            self::STATUS_REJECTED  => '#ef4444',
+            default                => '#f59e0b',
+        };
+    }
+
     public function paymentMethodLabel(): string
     {
         return match ($this->payment_method) {

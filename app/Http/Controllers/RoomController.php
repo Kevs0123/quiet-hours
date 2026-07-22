@@ -29,8 +29,15 @@ class RoomController extends Controller
         $data = $request->validated();
         unset($data['image']);
 
-        if ($request->hasFile('image')) {
-            $data['image_path'] = $request->file('image')->store('rooms', 'public');
+        $image = $request->file('image');
+        $hasValidImage = $image instanceof \Illuminate\Http\UploadedFile
+            && $image->isValid()
+            && $image->getError() === UPLOAD_ERR_OK
+            && $image->getSize() > 0
+            && !empty($image->getRealPath());
+
+        if ($hasValidImage) {
+            $data['image_path'] = $image->store('rooms', 'public');
         }
 
         Room::create($data);
@@ -59,12 +66,19 @@ class RoomController extends Controller
         $data = $request->validated();
         unset($data['image']);
 
-        if ($request->hasFile('image')) {
+        $image = $request->file('image');
+        $hasValidImage = $image instanceof \Illuminate\Http\UploadedFile
+            && $image->isValid()
+            && $image->getError() === UPLOAD_ERR_OK
+            && $image->getSize() > 0
+            && !empty($image->getRealPath());
+
+        if ($hasValidImage) {
             // Remove the old photo before storing the new one
             if ($room->image_path && Storage::disk('public')->exists($room->image_path)) {
                 Storage::disk('public')->delete($room->image_path);
             }
-            $data['image_path'] = $request->file('image')->store('rooms', 'public');
+            $data['image_path'] = $image->store('rooms', 'public');
         }
 
         $room->update($data);

@@ -36,7 +36,7 @@ class AdminController extends Controller
                     // (check_out_date is the last night's *following* morning already)
                     'start' => $booking->check_in_date->format('Y-m-d'),
                     'end'   => $booking->check_out_date->format('Y-m-d'),
-                    'color' => '#c9a86a',
+                    'color' => $booking->calendarColor(),
                     'url'   => route('admin.bookings.show', $booking),
                 ];
             })
@@ -113,18 +113,7 @@ class AdminController extends Controller
                 'admin_notes'  => null,
             ]);
 
-            if ($booking->user?->email) {
-                try {
-                    $booking->load('room.category');
-                    \Illuminate\Support\Facades\Mail::to($booking->user->email)
-                        ->send(new \App\Mail\BookingConfirmationMail($booking));
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::error('Failed to send bulk booking confirmation email', [
-                        'booking_id' => $booking->booking_id,
-                        'error'      => $e->getMessage(),
-                    ]);
-                }
-            }
+            $this->sendBookingConfirmationEmails($booking);
         }
 
         $count = $bookings->count();
@@ -190,20 +179,37 @@ class AdminController extends Controller
             'admin_notes'  => null,
         ]);
 
+        $this->sendBookingConfirmationEmails($booking);
+
+        return back()->with('success', "Booking {$booking->booking_id} confirmed. The guest has been notified by email.");
+    }
+
+    private function sendBookingConfirmationEmails(Booking $booking): void
+    {
+        $booking->load('room.category');
+
+        $recipientEmails = [];
+
         if ($booking->user?->email) {
+            $recipientEmails[] = $booking->user->email;
+        }
+
+        if (auth()->user()?->isAdmin() && auth()->user()->email) {
+            $recipientEmails[] = auth()->user()->email;
+        }
+
+        foreach (array_unique($recipientEmails) as $email) {
             try {
-                $booking->load('room.category');
-                \Illuminate\Support\Facades\Mail::to($booking->user->email)
+                \Illuminate\Support\Facades\Mail::to($email)
                     ->send(new \App\Mail\BookingConfirmationMail($booking));
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send booking confirmation email', [
                     'booking_id' => $booking->booking_id,
+                    'email'      => $email,
                     'error'      => $e->getMessage(),
                 ]);
             }
         }
-
-        return back()->with('success', "Booking {$booking->booking_id} confirmed. The guest has been notified by email.");
     }
 
     public function rejectBooking(\Illuminate\Http\Request $request, Booking $booking)

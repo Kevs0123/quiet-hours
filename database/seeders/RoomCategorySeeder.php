@@ -43,7 +43,6 @@ class RoomCategorySeeder extends Seeder
             );
         }
 
-        // A few extra randomly generated categories for variety
-        RoomCategory::factory()->count(3)->create();
+        // Keep the category set concise and curated (no random extras)
     }
 }

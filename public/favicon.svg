@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Quiet Hours logo">
+  <rect width="64" height="64" rx="16" fill="#1b2a4a"/>
+  <rect x="14" y="16" width="36" height="32" rx="10" fill="#f7f4ee" opacity="0.95"/>
+  <rect x="21" y="23" width="22" height="10" rx="3" fill="#c9a15a"/>
+  <path d="M22 22h10a4 4 0 0 1 4 4v5h-6v-3h-8v-6Z" fill="#1b2a4a"/>
+  <path d="M24 18h9a5 5 0 0 1 5 5v1h-4v-1a1 1 0 0 0-1-1h-5a1 1 0 0 0-1 1v1h-4v-1a5 5 0 0 1 5-5Z" fill="#c9a15a"/>
+  <circle cx="45" cy="21" r="4" fill="#c9a15a"/>
+</svg>

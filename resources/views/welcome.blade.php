@@ -17,7 +17,7 @@
     }
     .welcome-hero-bg {
         position: absolute; inset: 0;
-        background-image: url('https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1800&q=85&auto=format&fit=crop');
+        background-image: url('https://plus.unsplash.com/premium_photo-1661929519129-7a76946c1d38?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
         background-size: cover;
         background-position: center 55%;
         animation: slowZoom 18s ease-in-out infinite alternate;
@@ -168,11 +168,11 @@
         <h1>Experience the Art of<br><em>Quiet Luxury</em></h1>
         <p>A boutique hotel experience built for comfort, elegance, and memorable stays.</p>
         <div class="welcome-hero-btns">
-            @auth
+                @auth
                 @if(auth()->user()->isAdmin())
                     <a href="{{ route('admin.dashboard') }}" class="btn-hero-primary">📊 Go to Dashboard</a>
                 @else
-                    <a href="{{ route('booking.home') }}" class="btn-hero-primary">✦ Book Your Stay</a>
+                    <a href="{{ route('booking.start', ['customerName' => auth()->user()->name]) }}" class="btn-hero-primary">✦ Book Your Stay</a>
                 @endif
             @else
                 <a href="{{ route('register') }}" class="btn-hero-primary">✦ Book Your Stay</a>
@@ -209,17 +209,24 @@
         <div class="rooms-grid" id="roomsGrid">
             @forelse($featuredRooms as $i => $room)
             @php
-                $imgs = [
+                $fallbackImages = [
                     'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80&auto=format&fit=crop',
                     'https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=600&q=80&auto=format&fit=crop',
                     'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=600&q=80&auto=format&fit=crop',
                     'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600&q=80&auto=format&fit=crop',
                     'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=600&q=80&auto=format&fit=crop',
                     'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&q=80&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1549187774-b4e9a4d3d1b2?w=600&q=80&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1578500494198-246f612d782b?w=600&q=80&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1605733881820-f1a3a9d5f7a6?w=600&q=80&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1500576661484-7b4faea1d121?w=600&q=80&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1537050857617-c3e4a1ca6faf?w=600&q=80&auto=format&fit=crop',
                 ];
+                $imageUrl = ($room->image_path && $room->image_path !== '') ? $room->image_url : $fallbackImages[$i % count($fallbackImages)];
             @endphp
             <div class="room-card" data-cat="{{ $room->room_category_id }}" style="animation:fadeUp .5s ease {{ $i*0.07 }}s both;"
-                data-room-img="{{ $room->image_path ? $room->image_url : $imgs[$i % count($imgs)] }}"
+                data-room-img="{{ $imageUrl }}"
                 data-room-category="{{ $room->category->name }}"
                 data-room-name="{{ $room->name }}"
                 data-room-desc="{{ $room->description ?: 'A beautifully appointed room designed for your comfort and relaxation.' }}"
@@ -227,7 +234,7 @@
                 data-room-capacity="{{ $room->capacity }} guest{{ $room->capacity > 1 ? 's' : '' }}"
                 data-room-book="{{ auth()->check() ? (auth()->user()->isClient() ? route('booking.home') : route('admin.rooms.show', $room)) : route('register') }}">
                 <div class="room-card-img">
-                    <img src="{{ $room->image_path ? $room->image_url : $imgs[$i % count($imgs)] }}" alt="{{ $room->name }}" loading="lazy">
+                    <img src="{{ $imageUrl }}" alt="{{ $room->name }}" loading="lazy" onerror="this.src='{{ $fallbackImages[0] }}';">
                     <div class="room-card-badge">Available</div>
                 </div>
                 <div class="room-card-body">
@@ -246,7 +253,7 @@
                             <button type="button" class="room-card-view" data-room-details-btn>Details</button>
                             @auth
                                 @if(auth()->user()->isClient())
-                                    <a href="{{ route('booking.home') }}" class="room-card-book">Book Now</a>
+                                    <a href="{{ route('booking.start', ['customerName' => auth()->user()->name, 'room_id' => $room->id]) }}" class="room-card-book">Book Now</a>
                                 @else
                                     <a href="{{ route('admin.rooms.show', $room) }}" class="room-card-book">Edit</a>
                                 @endif
