@@ -8,9 +8,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 FROM node:20 AS assets
 WORKDIR /app
 COPY package.json package-lock.json ./
-# Use legacy peer deps to avoid build failures from conflicting peerDependencies
-# and make the install quieter and non-interactive in CI environments.
-RUN npm ci --legacy-peer-deps --no-audit --progress=false
+# Use a normal install here because `npm ci` fails when the lockfile and
+# package manifest are not perfectly aligned in this repository.
+RUN npm install --legacy-peer-deps --no-audit --progress=false
 COPY . .
 RUN npm run build
 
