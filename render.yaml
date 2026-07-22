@@ -14,6 +14,8 @@ services:
         value: https://quiet-hours-gyyj.onrender.com
       - key: DB_CONNECTION
         value: mysql
+      - key: DB_URL
+        value: ${DATABASE_URL}
       - key: DB_HOST
         value: ${DATABASE_HOST}
       - key: DB_PORT
